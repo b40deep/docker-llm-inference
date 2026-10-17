@@ -10,56 +10,24 @@
   <!-- Custom project styling is temporarily disabled while using Bootstrap defaults. -->
   <!-- <link rel="stylesheet" href="/static/styles.css"> -->
 </head>
-<body class="bg-body-tertiary">
-  <main class="container py-5">
-    <section id="login-view" class="card border-0 shadow-sm mx-auto" style="max-width: 42rem;" aria-labelledby="login-title">
-      <div class="card-body p-4 p-md-5">
-        <p class="text-primary-emphasis fw-semibold small text-uppercase letter-spacing-1 mb-2">Server-side inference proxy</p>
-        <h1 id="login-title" class="h2 mb-3">Focused LLM inference</h1>
-        <p class="text-body-secondary mb-4">Enter the shared password to access this workspace. Upstream credentials remain on the server.</p>
-      <form id="login-form">
-        <div class="mb-3">
-          <label class="form-label" for="password">Shared password</label>
-          <input id="password" class="form-control" name="password" type="password" autocomplete="current-password" required>
+<body class="bg-body-tertiary vh-100 overflow-hidden">
+  <main class="container h-100 py-3 py-md-4">
+    <section id="login-view" class="h-100 d-flex align-items-center justify-content-center" aria-labelledby="login-title">
+      <div class="card border-0 shadow-sm w-100" style="max-width: 42rem;">
+        <div class="card-body p-4 p-md-5">
+          <form id="login-form">
+            <div class="mb-3">
+              <label class="form-label" for="password">Tekamu password</label>
+              <input id="password" class="form-control" name="password" type="password" autocomplete="current-password" autofocus required>
+            </div>
+            <button class="btn btn-primary" type="submit">Yingila</button>
+            <p id="login-error" class="text-danger small mt-3 mb-0" role="alert" hidden></p>
+          </form>
+          <footer class="small text-body-secondary mt-4">Sign-in and response history are stored only in this browser.</footer>
         </div>
-        <button class="btn btn-primary" type="submit">Sign in</button>
-        <p id="login-error" class="text-danger small mt-3 mb-0" role="alert" hidden></p>
-      </form>
-        <footer class="small text-body-secondary mt-4">Sign-in and response history are stored only in this browser.</footer>
       </div>
     </section>
-
-    <section id="workspace-view" class="mx-auto" style="max-width: 72rem;" hidden aria-label="chapatiGPT workspace">
-      <header class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
-        <h2 class="h4 mb-0">chapatiGPT</h2>
-        <div class="d-flex flex-wrap align-items-center gap-3">
-          <div class="form-check mb-0">
-            <input id="use-history" class="form-check-input" type="checkbox" checked>
-            <label class="form-check-label" for="use-history">Use past responses</label>
-          </div>
-          <span id="service-status" class="badge text-bg-secondary rounded-pill">Checking service…</span>
-          <button id="logout-button" class="btn btn-outline-secondary btn-sm" type="button">Log out</button>
-        </div>
-      </header>
-
-      <section class="card shadow-sm" aria-label="Inference search results">
-        <div class="card-header bg-body d-flex align-items-center justify-content-between gap-3 py-3">
-          <span class="small text-body-secondary">Local results</span>
-          <button id="clear-history" class="btn btn-outline-secondary btn-sm" type="button">Clear</button>
-        </div>
-        <div id="responses" class="card-body d-grid gap-3 overflow-auto" style="min-height: 12rem; max-height: 55vh;" aria-live="polite"></div>
-        <section class="card-footer bg-body" aria-label="Send a prompt">
-          <form id="inference-form">
-            <label class="visually-hidden" for="prompt">Prompt</label>
-            <textarea id="prompt" class="form-control" name="prompt" rows="2" maxlength="20000" placeholder="Search a question or describe an inference task…" aria-label="Prompt. Press Control and Enter to send." required></textarea>
-            <p id="inference-error" class="text-danger small mt-2 mb-0" role="alert" hidden></p>
-          </form>
-        </section>
-      </section>
-    </section>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/lib/marked.umd.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" defer></script>
-  <script src="/static/app.js" defer></script>
+  <script src="/static/login.js" defer></script>
 </body>
 </html>

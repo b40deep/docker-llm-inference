@@ -41,9 +41,13 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
 
 
 @app.get("/", include_in_schema=False)
-@app.get("/workspace", include_in_schema=False)
-async def serve_frontend() -> FileResponse:
+async def serve_login() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/workspace", include_in_schema=False)
+async def serve_workspace() -> FileResponse:
+    return FileResponse(STATIC_DIR / "workspace.html")
 
 
 @app.get("/api/health")
@@ -57,6 +61,12 @@ async def login(payload: LoginRequest, settings: Settings = Depends(get_settings
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     session = create_session(settings)
     return {"authenticated": True, "token": session.token, "expiresAt": session.expires_at}
+
+
+@app.get("/api/auth/session")
+async def validate_session(_: object = Depends(require_authenticated_request)) -> dict:
+    """Confirm that a browser-held session is still valid on this server."""
+    return {"authenticated": True}
 
 
 @app.post("/api/inference")

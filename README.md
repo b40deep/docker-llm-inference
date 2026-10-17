@@ -22,8 +22,8 @@ I made this to run on docker as a container. It's a Python 3.12 FastAPI applicat
 1. Copy `.env.example` to `.env` and replace `APP_PASSWORD`.
 2. Create and activate a Python 3.12 virtual environment.
 3. Install dependencies: `python -m pip install -r requirements.txt`.
-4. Start the app: `python -m uvicorn app.main:app --reload`.
-5. Open `http://127.0.0.1:8000`.
+4. Start the app: `python -m uvicorn app.main:app --reload --port 8001`.
+5. Open `http://127.0.0.1:8001`.
 
 If `LLM_ENDPOINT_URL` is blank, the application provides a deterministic safe demo response. To call an upstream, configure an OpenAI-compatible chat-completions URL, `LLM_API_KEY` (when required), and `LLM_MODEL` in the server-side `.env`. The adapter sends `{ model, messages, stream: false }` and accepts standard `choices[0].message.content`, `text`, or `response` output formats.
 
@@ -48,15 +48,16 @@ The application turns that base URL into `/openai/v1/chat/completions`, supplies
 
 ## UI behavior
 
-- `/` and `/workspace` serve the same single-page interface.
-- The sign-in panel is shown until login succeeds.
+- `/` serves the sign-in page and `/workspace` serves the inference page as separate documents.
+- The sign-in page defaults focus to its password field, uses the `Tekamu password` / `Yingila` labels, and navigates to `/workspace` after a successful login.
 - Bootstrap CSS provides the current baseline styling: responsive containers, cards, forms, buttons, and status badges. The inactive project-specific rules remain in `app/static/styles.css` for later restoration or revision.
-- The `chapatiGPT` header, inference status, and log-out control share one line on desktop.
-- A single compact search panel keeps the scrollable local responses above the prompt input. Prompts use green Markdown content and responses use blue Markdown content.
+- The workspace is fixed to the viewport: the page itself does not scroll, while the previous-results region scrolls independently.
+- The `chapatiGPT` header, inference status, and log-out control share one compact bar on desktop.
+- A one-row previous-results header precedes a fixed-height results region; prompts use green Markdown content and responses use blue Markdown content.
 - **Use past responses** is enabled by default. It sends the latest 20 local prompt/response messages as context with the next inference request; clear the checkbox to send only the current prompt.
 - Prompt and response lines support GitHub-flavored Markdown. Marked parses Markdown and DOMPurify sanitizes the resulting HTML before it is displayed.
 - Send with **Ctrl+Enter**. The input starts at two lines and grows up to ten lines, then scrolls vertically.
-- **Log out** removes only the browser session. **Clear** removes only the local response history.
+- **Log out** removes only the browser session and returns to `/`. **Clear** removes only the local response history.
 
 ## API
 
@@ -72,7 +73,7 @@ All failures have `{ "error": { "code", "message", "details" } }` shape. Send `A
 
 Run tests with `python -m pytest`.
 
-For Docker, first create `.env`, then use `docker compose up --build`. Docker Compose requires a local `.env`; it is deliberately ignored by Git.
+For Docker, first create `.env`, then use `docker compose up --build`. Docker Compose requires a local `.env`; it is deliberately ignored by Git. The Compose mapping exposes the container's internal port `8000` on host port `8001`, so open `http://127.0.0.1:8001`.
 
 ## Limits and next steps
 

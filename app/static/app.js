@@ -21,12 +21,21 @@ function renderMarkdown(markdown) {
   return DOMPurify.sanitize(parsed, { USE_PROFILES: { html: true } });
 }
 
-function showView() {
+async function requireSession() {
   const active = session() && session().expiresAt > Math.floor(Date.now() / 1000);
-  $("#login-view").hidden = active;
-  $("#workspace-view").hidden = !active;
-  if (active) { renderResponses(); checkHealth(); }
-  else { localStorage.removeItem(storageKeys.session); }
+  if (!active) {
+    localStorage.removeItem(storageKeys.session);
+    location.replace("/");
+    return false;
+  }
+  try {
+    await api("/api/auth/session");
+    return true;
+  } catch {
+    localStorage.removeItem(storageKeys.session);
+    location.replace("/");
+    return false;
+  }
 }
 
 function renderResponses() {
@@ -34,10 +43,20 @@ function renderResponses() {
   root.replaceChildren();
   const items = responses();
   if (!items.length) {
-    const empty = document.createElement("p"); empty.className = "text-body-secondary mb-0"; empty.textContent = "Your local search responses will appear here."; root.append(empty); return;
+    const empty = document.createElement("p"); empty.className = "text-body-secondary mb-0"; empty.textContent = "Your previous results will appear here."; root.append(empty); return;
   }
   items.forEach((item) => {
     const line = document.createElement("div"); line.className = `message ${item.role} ${item.role === "user" ? "text-success" : "text-primary"}`; line.innerHTML = renderMarkdown(item.content);
+    line.querySelectorAll("p").forEach((paragraph) => {
+      paragraph.classList.add(item.role === "user" ? "mb-0" : "mb-0");
+    });
+    
+    if (item.role === "assistant") {
+      const divider = document.createElement("hr");
+      divider.className = "my-2";
+      line.append(divider);
+    }
+
     root.append(line);
   });
   root.scrollTop = root.scrollHeight;
@@ -45,9 +64,11 @@ function renderResponses() {
 
 function resizePrompt() {
   const prompt = $("#prompt");
-  const maxHeight = parseFloat(getComputedStyle(prompt).lineHeight) * 10;
+  const lineHeight = parseFloat(getComputedStyle(prompt).lineHeight);
+  const maxHeight = lineHeight * 10;
+  const minHeight = lineHeight * 2;
   prompt.style.height = "auto";
-  prompt.style.height = `${Math.min(prompt.scrollHeight, maxHeight)}px`;
+  prompt.style.height = `${Math.max(minHeight, Math.min(prompt.scrollHeight, maxHeight))}px`;
   prompt.classList.toggle("has-overflow", prompt.scrollHeight > maxHeight);
 }
 
@@ -66,15 +87,6 @@ async function checkHealth() {
   catch { $("#service-status").textContent = "Service unavailable"; }
 }
 
-$("#login-form").addEventListener("submit", async (event) => {
-  event.preventDefault(); showError("#login-error");
-  const password = $("#password").value;
-  try {
-    const data = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ password }) });
-    saveSession({ token: data.token, expiresAt: data.expiresAt }); $("#password").value = ""; showView();
-  } catch (error) { showError("#login-error", error.message); }
-});
-
 $("#inference-form").addEventListener("submit", async (event) => {
   event.preventDefault(); showError("#inference-error");
   const prompt = $("#prompt").value.trim(); const input = $("#prompt");
@@ -86,7 +98,7 @@ $("#inference-form").addEventListener("submit", async (event) => {
     const items = responses(); items.push({ role: "user", content: prompt, at: Date.now() }, { role: "assistant", content: data.response, at: Date.now() });
     saveResponses(items); input.value = ""; resizePrompt(); renderResponses();
   } catch (error) {
-    if (error.message === "Authentication is required.") { localStorage.removeItem(storageKeys.session); showView(); }
+    if (error.message === "Authentication is required.") { localStorage.removeItem(storageKeys.session); location.replace("/"); }
     else showError("#inference-error", error.message);
   } finally { input.disabled = false; input.focus(); }
 });
@@ -99,8 +111,16 @@ $("#prompt").addEventListener("keydown", (event) => {
   }
 });
 
-$("#logout-button").addEventListener("click", () => { localStorage.removeItem(storageKeys.session); showView(); });
+$("#logout-button").addEventListener("click", () => { localStorage.removeItem(storageKeys.session); location.assign("/"); });
 migrateResponseStorage();
 $("#clear-history").addEventListener("click", () => { localStorage.removeItem(storageKeys.responses); renderResponses(); });
-resizePrompt();
-showView();
+async function initializeWorkspace() {
+  if (!await requireSession()) return;
+  document.body.hidden = false;
+  resizePrompt();
+  renderResponses();
+  checkHealth();
+  $("#prompt").focus();
+}
+
+initializeWorkspace();
