@@ -7,7 +7,7 @@
 
 # LLM Inference Proxy
 
-I made this to run on docker as a container. It's a Python 3.12 FastAPI application with a password-gated plain HTML/CSS/JavaScript inference workspace. It performs **non-streaming** LLM requests exclusively from the server. Browser storage is used only for local sign-in state and response history.
+I made this to run on docker as a container. It's a Python 3.12 FastAPI application with a password-gated plain HTML/CSS/JavaScript inference workspace. It performs **non-streaming** LLM requests exclusively from the server. Browser storage is used only for local sign-in state and response history. The interface currently uses Bootstrap CSS from a CDN; the local custom stylesheet is temporarily disabled.
 
 ## Security boundaries
 
@@ -50,6 +50,7 @@ The application turns that base URL into `/openai/v1/chat/completions`, supplies
 
 - `/` and `/workspace` serve the same single-page interface.
 - The sign-in panel is shown until login succeeds.
+- Bootstrap CSS provides the current baseline styling: responsive containers, cards, forms, buttons, and status badges. The inactive project-specific rules remain in `app/static/styles.css` for later restoration or revision.
 - The `chapatiGPT` header, inference status, and log-out control share one line on desktop.
 - A single compact search panel keeps the scrollable local responses above the prompt input. Prompts use green Markdown content and responses use blue Markdown content.
 - **Use past responses** is enabled by default. It sends the latest 20 local prompt/response messages as context with the next inference request; clear the checkbox to send only the current prompt.

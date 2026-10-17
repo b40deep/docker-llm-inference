@@ -34,10 +34,10 @@ function renderResponses() {
   root.replaceChildren();
   const items = responses();
   if (!items.length) {
-    const empty = document.createElement("p"); empty.className = "muted"; empty.textContent = "Your local search responses will appear here."; root.append(empty); return;
+    const empty = document.createElement("p"); empty.className = "text-body-secondary mb-0"; empty.textContent = "Your local search responses will appear here."; root.append(empty); return;
   }
   items.forEach((item) => {
-    const line = document.createElement("div"); line.className = `message ${item.role}`; line.innerHTML = renderMarkdown(item.content);
+    const line = document.createElement("div"); line.className = `message ${item.role} ${item.role === "user" ? "text-success" : "text-primary"}`; line.innerHTML = renderMarkdown(item.content);
     root.append(line);
   });
   root.scrollTop = root.scrollHeight;

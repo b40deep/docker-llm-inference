@@ -5,49 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Password-gated non-streaming LLM inference workspace.">
   <title>Inference Workspace</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-  <link rel="stylesheet" href="/static/styles.css">
+  <!-- Bootstrap supplies the temporary baseline UI styling. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+  <!-- Custom project styling is temporarily disabled while using Bootstrap defaults. -->
+  <!-- <link rel="stylesheet" href="/static/styles.css"> -->
 </head>
-<body>
-  <main class="container app-shell">
-    <section id="login-view" class="login-panel" aria-labelledby="login-title">
-      <p class="eyebrow">SERVER-SIDE INFERENCE PROXY</p>
-      <h1 id="login-title">Focused LLM inference</h1>
-      <p class="muted">Enter the shared password to access this workspace. Upstream credentials remain on the server.</p>
+<body class="bg-body-tertiary">
+  <main class="container py-5">
+    <section id="login-view" class="card border-0 shadow-sm mx-auto" style="max-width: 42rem;" aria-labelledby="login-title">
+      <div class="card-body p-4 p-md-5">
+        <p class="text-primary-emphasis fw-semibold small text-uppercase letter-spacing-1 mb-2">Server-side inference proxy</p>
+        <h1 id="login-title" class="h2 mb-3">Focused LLM inference</h1>
+        <p class="text-body-secondary mb-4">Enter the shared password to access this workspace. Upstream credentials remain on the server.</p>
       <form id="login-form">
-        <label for="password">Shared password
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
-        </label>
-        <button type="submit">Sign in</button>
-        <p id="login-error" class="error" role="alert" hidden></p>
+        <div class="mb-3">
+          <label class="form-label" for="password">Shared password</label>
+          <input id="password" class="form-control" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Sign in</button>
+        <p id="login-error" class="text-danger small mt-3 mb-0" role="alert" hidden></p>
       </form>
-      <footer>Sign-in and response history are stored only in this browser.</footer>
+        <footer class="small text-body-secondary mt-4">Sign-in and response history are stored only in this browser.</footer>
+      </div>
     </section>
 
-    <section id="workspace-view" hidden aria-label="chapatiGPT workspace">
-      <header class="workspace-header">
-        <h3>chapatiGPT</h3>
-        <div class="header-actions">
-          <label class="context-toggle" for="use-history">
-            <input id="use-history" type="checkbox" checked>
-            Use past responses
-          </label>
-          <span id="service-status" class="status-pill">Checking service…</span>
-          <button id="logout-button" class="secondary outline compact">Log out</button>
+    <section id="workspace-view" class="mx-auto" style="max-width: 72rem;" hidden aria-label="chapatiGPT workspace">
+      <header class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+        <h2 class="h4 mb-0">chapatiGPT</h2>
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <div class="form-check mb-0">
+            <input id="use-history" class="form-check-input" type="checkbox" checked>
+            <label class="form-check-label" for="use-history">Use past responses</label>
+          </div>
+          <span id="service-status" class="badge text-bg-secondary rounded-pill">Checking service…</span>
+          <button id="logout-button" class="btn btn-outline-secondary btn-sm" type="button">Log out</button>
         </div>
       </header>
 
-      <section class="search-panel" aria-label="Inference search results">
-        <div class="panel-heading">
-          <span class="muted">Local results</span>
-          <button id="clear-history" class="secondary outline compact">Clear</button>
+      <section class="card shadow-sm" aria-label="Inference search results">
+        <div class="card-header bg-body d-flex align-items-center justify-content-between gap-3 py-3">
+          <span class="small text-body-secondary">Local results</span>
+          <button id="clear-history" class="btn btn-outline-secondary btn-sm" type="button">Clear</button>
         </div>
-        <div id="responses" class="responses" aria-live="polite"></div>
-
-        <section class="composer-panel" aria-label="Send a prompt">
+        <div id="responses" class="card-body d-grid gap-3 overflow-auto" style="min-height: 12rem; max-height: 55vh;" aria-live="polite"></div>
+        <section class="card-footer bg-body" aria-label="Send a prompt">
           <form id="inference-form">
-            <textarea id="prompt" name="prompt" rows="2" maxlength="20000" placeholder="Search a question or describe an inference task…" aria-label="Prompt. Press Control and Enter to send." required></textarea>
-            <p id="inference-error" class="error" role="alert" hidden></p>
+            <label class="visually-hidden" for="prompt">Prompt</label>
+            <textarea id="prompt" class="form-control" name="prompt" rows="2" maxlength="20000" placeholder="Search a question or describe an inference task…" aria-label="Prompt. Press Control and Enter to send." required></textarea>
+            <p id="inference-error" class="text-danger small mt-2 mb-0" role="alert" hidden></p>
           </form>
         </section>
       </section>
