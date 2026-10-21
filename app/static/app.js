@@ -39,31 +39,27 @@ async function requireSession() {
 }
 
 function renderResponses() {
-  const root = $("#responses");
-  root.replaceChildren();
   const items = responses();
-  if (!items.length) {
-    const empty = document.createElement("p"); empty.className = "text-body-secondary mb-0"; empty.textContent = "Your previous results will appear here."; root.append(empty); return;
-  }
-  items.forEach((item) => {
-    const line = document.createElement("div"); line.className = `message ${item.role} ${item.role === "user" ? "text-success" : "text-primary"}`; line.innerHTML = renderMarkdown(item.content);
-    line.querySelectorAll("p").forEach((paragraph) => {
-      paragraph.classList.add(item.role === "user" ? "mb-0" : "mb-0");
-    });
-    
-    if (item.role === "assistant") {
-      const divider = document.createElement("hr");
-      divider.className = "my-2";
-      line.append(divider);
+  [$("#responses"), $("#responses-tab-2")].forEach((root) => {
+    root.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement("p"); empty.className = "text-body-secondary mb-0"; empty.textContent = "Your previous results will appear here."; root.append(empty); return;
     }
-
-    root.append(line);
+    items.forEach((item) => {
+      const line = document.createElement("div"); line.className = `message ${item.role} ${item.role === "user" ? "text-success" : "text-primary"}`; line.innerHTML = renderMarkdown(item.content);
+      line.querySelectorAll("p").forEach((paragraph) => paragraph.classList.add("mb-0"));
+      if (item.role === "assistant") {
+        const divider = document.createElement("hr");
+        divider.className = "my-2";
+        line.append(divider);
+      }
+      root.append(line);
+    });
+    root.scrollTop = root.scrollHeight;
   });
-  root.scrollTop = root.scrollHeight;
 }
 
-function resizePrompt() {
-  const prompt = $("#prompt");
+function resizePrompt(prompt = $("#prompt")) {
   const lineHeight = parseFloat(getComputedStyle(prompt).lineHeight);
   const maxHeight = lineHeight * 10;
   const minHeight = lineHeight * 2;
@@ -83,41 +79,53 @@ async function api(path, options = {}) {
 }
 
 async function checkHealth() {
-  try { const data = await api("/api/health"); $("#service-status").textContent = `Inference: ${data.services.inference}`; }
-  catch { $("#service-status").textContent = "Service unavailable"; }
+  const statusNodes = document.querySelectorAll(".service-status");
+  try { const data = await api("/api/health"); statusNodes.forEach((node) => { node.textContent = `Inference: ${data.services.inference}`; }); }
+  catch { statusNodes.forEach((node) => { node.textContent = "Service unavailable"; }); }
 }
 
-$("#inference-form").addEventListener("submit", async (event) => {
-  event.preventDefault(); showError("#inference-error");
-  const prompt = $("#prompt").value.trim(); const input = $("#prompt");
+async function submitInference(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const input = form.querySelector("textarea");
+  const errorSelector = form.id === "inference-form" ? "#inference-error" : "#inference-error-tab-2";
+  showError(errorSelector);
+  const prompt = input.value.trim();
   if (!prompt) return;
   input.disabled = true;
   try {
     const history = $("#use-history").checked ? responses().slice(-20).map(({ role, content }) => ({ role, content })) : [];
     const data = await api("/api/inference", { method: "POST", body: JSON.stringify({ prompt, history }) });
     const items = responses(); items.push({ role: "user", content: prompt, at: Date.now() }, { role: "assistant", content: data.response, at: Date.now() });
-    saveResponses(items); input.value = ""; resizePrompt(); renderResponses();
+    saveResponses(items); input.value = ""; resizePrompt(input); renderResponses();
   } catch (error) {
     if (error.message === "Authentication is required.") { localStorage.removeItem(storageKeys.session); location.replace("/"); }
-    else showError("#inference-error", error.message);
+    else showError(errorSelector, error.message);
   } finally { input.disabled = false; input.focus(); }
-});
+}
 
-$("#prompt").addEventListener("input", resizePrompt);
-$("#prompt").addEventListener("keydown", (event) => {
-  if (event.ctrlKey && event.key === "Enter") {
+[ $("#inference-form"), $("#inference-form-tab-2") ].forEach((form) => form.addEventListener("submit", submitInference));
+[ $("#prompt"), $("#prompt-tab-2") ].forEach((prompt) => {
+  prompt.addEventListener("input", () => resizePrompt(prompt));
+  prompt.addEventListener("keydown", (event) => {
+    if (!(event.ctrlKey && event.key === "Enter")) return;
     event.preventDefault();
-    $("#inference-form").requestSubmit();
-  }
+    prompt.closest("form").requestSubmit();
+  });
 });
 
 $("#logout-button").addEventListener("click", () => { localStorage.removeItem(storageKeys.session); location.assign("/"); });
 migrateResponseStorage();
-$("#clear-history").addEventListener("click", () => { localStorage.removeItem(storageKeys.responses); renderResponses(); });
+[ $("#clear-history"), $("#clear-history-tab-2") ].forEach((button) => button.addEventListener("click", () => { localStorage.removeItem(storageKeys.responses); renderResponses(); }));
+$("#alternate-tab").addEventListener("shown.bs.tab", () => {
+  renderResponses();
+  resizePrompt($("#prompt-tab-2"));
+  $("#prompt-tab-2").focus();
+});
 async function initializeWorkspace() {
   if (!await requireSession()) return;
   document.body.hidden = false;
-  resizePrompt();
+  [$("#prompt"), $("#prompt-tab-2")].forEach(resizePrompt);
   renderResponses();
   checkHealth();
   $("#prompt").focus();
