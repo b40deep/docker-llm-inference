@@ -1,3 +1,5 @@
+[latest updates at the bottom]
+
 # for the pw page
 
 ---
@@ -30,3 +32,32 @@ main content:
     - row 2/20, expanding to 10 max
         - text input for the prompt: [same placeholder as current]
 
+
+---
+
+UI Idea 2:
+the layout to implement:
+
+under the section, create a div that has side scrolling 
+it will hold cards that scroll sideways.
+one card already exists in the code. the card that has the input and results display. 
+get every QnA and create a card for it; card header has the Qn, card footer has the response
+cards move from left to right in order of oldest to newest.
+
+for the input card [will be the default card seen and focussed on]
+the input will be at the top as I've edited it in the html.
+then the response will be at the bottom, in the card body.
+
+---
+
+UI Idea 2:
+the layout to implement:
+
+cards still remain intact
+change the inference card thus:
+in the body section, 
+- move the form for the prompt input to come just below
+- then the horizontal scrollable section of results cards as before
+- every time a prompt is sent, a card is created with its response. 
+- that latest card should always be in focus on first / subsequent page loads
+- whenever a new qna is added tot he scroll list, let it be the focus.

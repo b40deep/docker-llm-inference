@@ -40,11 +40,12 @@ async function requireSession() {
 
 function renderResponses() {
   const items = responses();
-  [$("#responses"), $("#responses-tab-2")].forEach((root) => {
+  const root = $("#responses");
+  if (root) {
     root.replaceChildren();
     if (!items.length) {
-      const empty = document.createElement("p"); empty.className = "text-body-secondary mb-0"; empty.textContent = "Your previous results will appear here."; root.append(empty); return;
-    }
+      const empty = document.createElement("p"); empty.className = "text-body-secondary mb-0"; empty.textContent = "Your previous results will appear here."; root.append(empty);
+    } else {
     items.forEach((item) => {
       const line = document.createElement("div"); line.className = `message ${item.role} ${item.role === "user" ? "text-success" : "text-primary"}`; line.innerHTML = renderMarkdown(item.content);
       line.querySelectorAll("p").forEach((paragraph) => paragraph.classList.add("mb-0"));
@@ -56,7 +57,42 @@ function renderResponses() {
       root.append(line);
     });
     root.scrollTop = root.scrollHeight;
+    }
+  }
+  renderQuestionAnswerCards(items);
+}
+
+function renderQuestionAnswerCards(items) {
+  const historyCards = $("#qa-history-cards");
+  if (!historyCards) return;
+  historyCards.replaceChildren();
+
+  const pairs = [];
+  for (let index = 0; index < items.length; index += 1) {
+    if (items[index].role !== "user") continue;
+    pairs.push({ question: items[index].content, answer: items[index + 1]?.role === "assistant" ? items[index + 1].content : "" });
+  }
+
+  if (!pairs.length) {
+    historyCards.innerHTML = '<p class="text-body-secondary mb-0">Your results will appear here.</p>';
+    return;
+  }
+
+  pairs.forEach(({ question, answer }, index) => {
+    const card = document.createElement("article");
+    card.className = "card shadow-sm flex-shrink-0 d-flex flex-column h-100";
+    card.style.width = "min(28rem, 85vw)";
+    if (index === pairs.length - 1) card.id = "latest-qa-card";
+    card.innerHTML = `<header class="card-header bg-body text-success overflow-auto flex-shrink-0"><strong>Q</strong> ${renderMarkdown(question)}</header><footer class="card-footer bg-body text-primary flex-grow-1 overflow-auto"><strong>A</strong> ${answer ? renderMarkdown(answer) : '<span class="text-body-secondary">Waiting for response…</span>'}</footer>`;
+    card.querySelectorAll("p").forEach((paragraph) => paragraph.classList.add("mb-0"));
+    historyCards.append(card);
   });
+}
+
+function focusLatestQuestionAnswerCard() {
+  const latestCard = $("#latest-qa-card");
+  const historyCards = $("#qa-history-cards");
+  if (latestCard && historyCards) historyCards.scrollTo({ left: latestCard.offsetLeft, behavior: "auto" });
 }
 
 function resizePrompt(prompt = $("#prompt")) {
@@ -98,6 +134,7 @@ async function submitInference(event) {
     const data = await api("/api/inference", { method: "POST", body: JSON.stringify({ prompt, history }) });
     const items = responses(); items.push({ role: "user", content: prompt, at: Date.now() }, { role: "assistant", content: data.response, at: Date.now() });
     saveResponses(items); input.value = ""; resizePrompt(input); renderResponses();
+    requestAnimationFrame(focusLatestQuestionAnswerCard);
   } catch (error) {
     if (error.message === "Authentication is required.") { localStorage.removeItem(storageKeys.session); location.replace("/"); }
     else showError(errorSelector, error.message);
@@ -120,6 +157,7 @@ migrateResponseStorage();
 $("#alternate-tab").addEventListener("shown.bs.tab", () => {
   renderResponses();
   resizePrompt($("#prompt-tab-2"));
+  requestAnimationFrame(focusLatestQuestionAnswerCard);
   $("#prompt-tab-2").focus();
 });
 async function initializeWorkspace() {

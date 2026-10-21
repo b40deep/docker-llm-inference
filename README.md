@@ -52,7 +52,7 @@ The application turns that base URL into `/openai/v1/chat/completions`, supplies
 - The sign-in page defaults focus to its password field, uses the `Tekamu password` / `Yingila` labels, and navigates to `/workspace` after a successful login.
 - Bootstrap CSS provides the current baseline styling: responsive containers, cards, forms, buttons, and status badges. The inactive project-specific rules remain in `app/static/styles.css` for later restoration or revision.
 - The workspace is fixed to the viewport: the page itself does not scroll, while the previous-results region scrolls independently.
-- The `chapatiGPT` header includes two tabs beside the app name. Both currently expose duplicated inference interfaces while a distinct second UI is developed.
+- The `chapatiGPT` header includes two tabs beside the app name. **UI Idea 2** places its focused prompt at the top of the inference card and renders oldest-to-newest Q&A result cards below it in a horizontally scrollable region; the newest card is brought into view when this tab opens. Both tabs use the same local history and inference behavior.
 - The inference status and log-out control share the compact header bar on desktop.
 - A one-row previous-results header precedes a fixed-height results region; prompts use green Markdown content and responses use blue Markdown content.
 - **Use past responses** is enabled by default. It sends the latest 20 local prompt/response messages as context with the next inference request; clear the checkbox to send only the current prompt.
