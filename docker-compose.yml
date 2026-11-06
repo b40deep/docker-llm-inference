@@ -4,4 +4,4 @@ services:
     env_file:
       - .env
     ports:
-      - "8001:8000" # Host port : container port
+      - "8001:8001" # Host port : container port
