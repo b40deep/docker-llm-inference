@@ -1,7 +1,7 @@
 import asyncio
 
 from app.config import Settings
-from app.llm_proxy import _build_upstream_request, _upstream_url, infer
+from app.llm_proxy import TRANSIENT_STATUS_CODES, _build_upstream_request, _upstream_url, infer
 
 
 def test_inference_uses_safe_demo_without_endpoint():
@@ -68,3 +68,7 @@ def test_request_includes_prior_search_context_before_current_prompt():
         *history,
         {"role": "user", "content": "Current search"},
     ]
+
+
+def test_transient_statuses_include_common_retry_candidates():
+    assert {408, 429, 500, 502, 503, 504} <= TRANSIENT_STATUS_CODES

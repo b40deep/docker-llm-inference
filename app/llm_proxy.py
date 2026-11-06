@@ -1,4 +1,5 @@
 """Non-streaming server-side LLM adapter."""
+import asyncio
 from typing import Any
 
 import httpx
@@ -8,6 +9,15 @@ from .config import Settings
 
 class UpstreamInferenceError(Exception):
     """Raised when a configured upstream fails without exposing its details."""
+
+
+TRANSIENT_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
+RETRYABLE_TRANSPORT_ERRORS = (
+    httpx.ConnectError,
+    httpx.NetworkError,
+    httpx.PoolTimeout,
+    httpx.RemoteProtocolError,
+)
 
 
 def demo_response(prompt: str) -> str:
@@ -75,9 +85,21 @@ async def infer(prompt: str, settings: Settings, history: list[dict[str, str]] |
 
     headers, payload = _build_upstream_request(settings, prompt, history)
     try:
-        async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
-            response = await client.post(_upstream_url(settings), headers=headers, json=payload)
-            response.raise_for_status()
-            return _extract_response(response.json())
+        # Reuse connections within the request's retry attempts. This avoids needless
+        # reconnects while keeping this adapter independent of a particular provider SDK.
+        limits = httpx.Limits(max_connections=20, max_keepalive_connections=10)
+        async with httpx.AsyncClient(timeout=settings.request_timeout_seconds, limits=limits) as client:
+            for attempt in range(settings.upstream_max_retries + 1):
+                try:
+                    response = await client.post(_upstream_url(settings), headers=headers, json=payload)
+                    if response.status_code in TRANSIENT_STATUS_CODES and attempt < settings.upstream_max_retries:
+                        await asyncio.sleep(0.25 * (2**attempt))
+                        continue
+                    response.raise_for_status()
+                    return _extract_response(response.json())
+                except RETRYABLE_TRANSPORT_ERRORS:
+                    if attempt >= settings.upstream_max_retries:
+                        raise
+                    await asyncio.sleep(0.25 * (2**attempt))
     except (httpx.HTTPError, ValueError, UpstreamInferenceError) as error:
         raise UpstreamInferenceError("The configured inference service is unavailable.") from error

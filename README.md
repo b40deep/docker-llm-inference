@@ -1,8 +1,7 @@
-
 > [!WARNING]
-> 
-> This is __vybeware__ (I'm going to assume I made that word up.) Vybeware is software that's entirely vybe-coded by prompting an LLM to do practically all the coding, with me only supervising decision making on the pipeline, doing logic debugging, and a few miscellaneous tasks I didn't want to leave to the coin-tosser (LLM).
-> 
+>
+> This is **vybeware** (I'm going to assume I made that word up.) Vybeware is software that's entirely vybe-coded by prompting an LLM to do practically all the coding, with me only supervising decision making on the pipeline, doing logic debugging, and a few miscellaneous tasks I didn't want to leave to the coin-tosser (LLM).
+>
 > Therefore, just because the software works, it doesn't mean it's **safe**. I haven't scoured the codebase to catch zero days, API leaks, etc. So if you use this project, don't store anything that you don't want a hacker (or the general public) finding.
 
 # LLM Inference Proxy
@@ -25,7 +24,7 @@ I made this to run on docker as a container. It's a Python 3.12 FastAPI applicat
 4. Start the app: `python -m uvicorn app.main:app --reload --port 8001`.
 5. Open `http://127.0.0.1:8001`.
 
-If `LLM_ENDPOINT_URL` is blank, the application provides a deterministic safe demo response. To call an upstream, configure an OpenAI-compatible chat-completions URL, `LLM_API_KEY` (when required), and `LLM_MODEL` in the server-side `.env`. The adapter sends `{ model, messages, stream: false }` and accepts standard `choices[0].message.content`, `text`, or `response` output formats.
+If `LLM_ENDPOINT_URL` is blank, the application provides a deterministic safe demo response. To call an upstream, configure an OpenAI-compatible chat-completions URL, `LLM_API_KEY` (when required), and `LLM_MODEL` in the server-side `.env`. The adapter sends `{ model, messages, stream: false }` and accepts standard `choices[0].message.content`, `text`, or `response` output formats. It retries transient connection failures and HTTP `408`, `429`, and `5xx` responses up to `UPSTREAM_MAX_RETRIES` (default `2`).
 
 ### Azure OpenAI configuration
 
@@ -62,11 +61,11 @@ The application turns that base URL into `/openai/v1/chat/completions`, supplies
 
 ## API
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/api/health` | Reports `demo` or `configured` without revealing configuration. |
-| POST | `/api/auth/login` | Validates `{ "password": "…" }`. |
-| POST | `/api/inference` | Authenticated inference for `{ "prompt": "…" }`. |
+| Method | Path              | Purpose                                                         |
+| ------ | ----------------- | --------------------------------------------------------------- |
+| GET    | `/api/health`     | Reports `demo` or `configured` without revealing configuration. |
+| POST   | `/api/auth/login` | Validates `{ "password": "…" }`.                                |
+| POST   | `/api/inference`  | Authenticated inference for `{ "prompt": "…" }`.                |
 
 All failures have `{ "error": { "code", "message", "details" } }` shape. Send `Authorization: Bearer <token>` for inference.
 

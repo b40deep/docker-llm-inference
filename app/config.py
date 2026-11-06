@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     llm_model: str = "demo-model"
     session_ttl_seconds: int = Field(default=28_800, gt=0)
     request_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    upstream_max_retries: int = Field(default=2, ge=0, le=5)
 
     @property
     def upstream_configured(self) -> bool:
